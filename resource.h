@@ -14,3 +14,6 @@
 #define IDC_FORCELIST                           1004
 #define IDC_CB_POST                             1005
 #define IDC_SLIDER_OPACITY                      1006
+#define IDC_OPACITY_A                           1010
+#define IDC_OPACITY_B                           1011
+#define IDC_OPACITY_C                           1012

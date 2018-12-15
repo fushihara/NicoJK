@@ -1662,9 +1662,15 @@ bool CNicoJK::CreateForceWindowItems(HWND hwnd)
 	        padding + 124, padding + 4, 50, 16, hwnd, reinterpret_cast<HMENU>(IDC_CHECK_SPECFILE), g_hinstDLL, nullptr) &&
 	    CreateWindowEx(0, TEXT("BUTTON"), TEXT("Rel"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
 	        padding + 174, padding + 4, 50, 16, hwnd, reinterpret_cast<HMENU>(IDC_CHECK_RELATIVE), g_hinstDLL, nullptr) &&
+	    CreateWindowEx(0, TEXT("BUTTON"), TEXT("透0.5"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+	        padding + 224, padding + 4, 50, 16, hwnd, reinterpret_cast<HMENU>(IDC_OPACITY_A)     , g_hinstDLL, nullptr) &&
+	    CreateWindowEx(0, TEXT("BUTTON"), TEXT("透0.2"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+	        padding + 274, padding + 4, 50, 16, hwnd, reinterpret_cast<HMENU>(IDC_OPACITY_B)     , g_hinstDLL, nullptr) &&
+	    CreateWindowEx(0, TEXT("BUTTON"), TEXT("透0.0"), WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+	        padding + 324, padding + 4, 50, 16, hwnd, reinterpret_cast<HMENU>(IDC_OPACITY_C)     , g_hinstDLL, nullptr) &&
 	    // TODO: (描画がとても面倒なので)スライダーはパネルでは表示しない
 	    CreateWindowEx(0, TRACKBAR_CLASS, TEXT("不透明度"), WS_CHILD | WS_VISIBLE | TBS_BOTH | TBS_NOTICKS | TBS_TOOLTIPS,
-	        padding + 224, hPanel_ ? -100 : padding + 4, 64, 21, hwnd, reinterpret_cast<HMENU>(IDC_SLIDER_OPACITY), g_hinstDLL, nullptr) &&
+	        padding + 374, hPanel_ ? -100 : padding + 4, 64, 21, hwnd, reinterpret_cast<HMENU>(IDC_SLIDER_OPACITY), g_hinstDLL, nullptr) &&
 	    CreateWindowEx(WS_EX_ACCEPTFILES, TEXT("LISTBOX"), nullptr, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY,
 	        padding, padding + 24, 100, 100, hwnd, reinterpret_cast<HMENU>(IDC_FORCELIST), g_hinstDLL, nullptr) &&
 	    CreateWindowEx(0, TEXT("COMBOBOX"), nullptr, WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS,
@@ -1675,6 +1681,9 @@ bool CNicoJK::CreateForceWindowItems(HWND hwnd)
 			SendDlgItemMessage(hwnd, IDC_RADIO_LOG, WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
 			SendDlgItemMessage(hwnd, IDC_CHECK_SPECFILE, WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
 			SendDlgItemMessage(hwnd, IDC_CHECK_RELATIVE, WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
+			SendDlgItemMessage(hwnd, IDC_OPACITY_A     , WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
+			SendDlgItemMessage(hwnd, IDC_OPACITY_B     , WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
+			SendDlgItemMessage(hwnd, IDC_OPACITY_C     , WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
 			SendDlgItemMessage(hwnd, IDC_FORCELIST, WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
 			SendDlgItemMessage(hwnd, IDC_CB_POST, WM_SETFONT, reinterpret_cast<WPARAM>(hForceFont_), 0);
 		}
@@ -1785,6 +1794,9 @@ LRESULT CNicoJK::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_RADIO_LOG), m_pApp, TVTestPanelButtonProc);
 				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_CHECK_SPECFILE), m_pApp, TVTestPanelButtonProc);
 				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_CHECK_RELATIVE), m_pApp, TVTestPanelButtonProc);
+				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_A     ), m_pApp, TVTestPanelButtonProc);
+				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_B     ), m_pApp, TVTestPanelButtonProc);
+				SetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_C     ), m_pApp, TVTestPanelButtonProc);
 			}
 			return TRUE;
 		}
@@ -1797,6 +1809,9 @@ LRESULT CNicoJK::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_RADIO_LOG));
 				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_CHECK_SPECFILE));
 				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_CHECK_RELATIVE));
+				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_A     ));
+				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_B     ));
+				ResetTVTestPanelItem(GetDlgItem(hwnd, IDC_OPACITY_C     ));
 			}
 			// 投稿欄のサブクラス化を解除
 			COMBOBOXINFO cbi = {};
@@ -1977,8 +1992,21 @@ LRESULT CNicoJK::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		case IDC_RADIO_FORCE:
 		case IDC_RADIO_LOG:
 			bDisplayLogList_ = SendDlgItemMessage(hwnd, IDC_RADIO_LOG, BM_GETCHECK, 0, 0 ) == BST_CHECKED;
-			SendMessage(hwnd, WM_UPDATE_LIST, TRUE, 0);
-			PostMessage(hwnd, WM_TIMER, TIMER_UPDATE, 0);
+			SendMessage(hwnd, WM_UPDATE_LIST, TRUE        , 0);
+			PostMessage(hwnd, WM_TIMER      , TIMER_UPDATE, 0);
+			break;
+		case IDC_OPACITY_A:
+			// 透過度を直接変更するオプション追加。10が完全に不透明。0が完全に透明。
+			SendDlgItemMessage(hForce_, IDC_SLIDER_OPACITY, TBM_SETPOS, TRUE, 5);
+			SendMessage(hForce_, WM_HSCROLL, MAKEWPARAM(SB_THUMBTRACK, 5), reinterpret_cast<LPARAM>(GetDlgItem(hForce_, IDC_SLIDER_OPACITY)));
+			break;
+		case IDC_OPACITY_B:
+			SendDlgItemMessage(hForce_, IDC_SLIDER_OPACITY, TBM_SETPOS, TRUE, 2);
+			SendMessage(hForce_, WM_HSCROLL, MAKEWPARAM(SB_THUMBTRACK, 2), reinterpret_cast<LPARAM>(GetDlgItem(hForce_, IDC_SLIDER_OPACITY)));
+			break;
+		case IDC_OPACITY_C:
+			SendDlgItemMessage(hForce_, IDC_SLIDER_OPACITY, TBM_SETPOS, TRUE, 0);
+			SendMessage(hForce_, WM_HSCROLL, MAKEWPARAM(SB_THUMBTRACK, 0), reinterpret_cast<LPARAM>(GetDlgItem(hForce_, IDC_SLIDER_OPACITY)));
 			break;
 		case IDC_CHECK_SPECFILE:
 			if (bSpecFile_ != (SendDlgItemMessage(hwnd, IDC_CHECK_SPECFILE, BM_GETCHECK, 0, 0) == BST_CHECKED)) {
@@ -2679,6 +2707,9 @@ LRESULT CNicoJK::ForceWindowProcMain(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 					ShowWindow(GetDlgItem(hwnd, IDC_CHECK_SPECFILE), swShow);
 					ShowWindow(GetDlgItem(hwnd, IDC_CHECK_RELATIVE), swShow);
 					ShowWindow(GetDlgItem(hwnd, IDC_SLIDER_OPACITY), swShow);
+					ShowWindow(GetDlgItem(hwnd, IDC_OPACITY_A     ), swShow);
+					ShowWindow(GetDlgItem(hwnd, IDC_OPACITY_B     ), swShow);
+					ShowWindow(GetDlgItem(hwnd, IDC_OPACITY_C     ), swShow);
 				}
 			}
 			SetWindowPos(hItem, nullptr, 0, 0, rcParent.right-rc.left*2, rcParent.bottom-rc.top-padding, SWP_NOMOVE | SWP_NOZORDER);
